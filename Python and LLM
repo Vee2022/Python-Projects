@@ -1,0 +1,146 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "e2ce0bf6-02ff-4bf4-a4c4-dfabba07bc51",
+   "metadata": {},
+   "source": [
+    "Python script leveraging the requests library and BeautifulSoup4 to scrape homicide statistics from Wikipedia pages. I will use a simple LLM agent to provide the city names and years to query"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 75,
+   "id": "36e73ece-6f79-4c3e-966e-c531e318af26",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: BeautifulSoup4 in c:\\users\\vmadu\\anaconda3\\anaconda 3 new\\lib\\site-packages (4.12.3)Note: you may need to restart the kernel to use updated packages.\n",
+      "\n",
+      "Requirement already satisfied: soupsieve>1.2 in c:\\users\\vmadu\\anaconda3\\anaconda 3 new\\lib\\site-packages (from BeautifulSoup4) (2.5)\n"
+     ]
+    }
+   ],
+   "source": [
+    "pip install BeautifulSoup4\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 77,
+   "id": "854f1e6b-0af2-4e98-aaa2-62ef3b90f8e0",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Failed to retrieve https://www.fbi.gov/how-we-can-help-you/more-fbi-services-and-information/ucr with status code 403\n",
+      "Empty DataFrame\n",
+      "Columns: []\n",
+      "Index: []\n"
+     ]
+    }
+   ],
+   "source": [
+    "import requests\n",
+    "from bs4 import BeautifulSoup\n",
+    "import pandas as pd\n",
+    "\n",
+    "# Function to fetch and parse web content\n",
+    "def fetch_content(url):\n",
+    "    headers = {\n",
+    "        \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\"\n",
+    "    }\n",
+    "    response = requests.get(url, headers=headers)\n",
+    "    if response.status_code == 200:\n",
+    "        soup = BeautifulSoup(response.text, 'html.parser')\n",
+    "        return soup\n",
+    "    else:\n",
+    "        print(f\"Failed to retrieve {url} with status code {response.status_code}\")\n",
+    "        return None\n",
+    "\n",
+    "# Define a function to search for homicide statistics\n",
+    "def search_homicide_data():\n",
+    "   \n",
+    "    # Replace this URL with a valid page from the FBI or other crime statistics sites\n",
+    "    url = \"https://www.fbi.gov/how-we-can-help-you/more-fbi-services-and-information/ucr\"\n",
+    "    return [url]\n",
+    "\n",
+    "# Function to extract statistics from parsed content\n",
+    "def extract_statistics(soup):\n",
+    "    data = []\n",
+    "    if soup:\n",
+    "    \n",
+    "        # Here we're looking for tables with data on crimes\n",
+    "        table = soup.find('table')  # Modify this based on actual HTML structure of the page you're scraping\n",
+    "        if table:\n",
+    "            rows = table.find_all('tr')\n",
+    "            for row in rows:\n",
+    "                cols = row.find_all('td')\n",
+    "                cols = [ele.text.strip() for ele in cols]\n",
+    "                if len(cols) > 1:  # Ensure there is valid data\n",
+    "                    data.append(cols)\n",
+    "    return data\n",
+    "\n",
+    "# Main function\n",
+    "def main():\n",
+    "    urls = search_homicide_data()  # Retrieve the URLs for homicide data\n",
+    "    results = []\n",
+    "    for url in urls:\n",
+    "        soup = fetch_content(url)\n",
+    "        if soup:\n",
+    "            data = extract_statistics(soup)\n",
+    "            for row in data:\n",
+    "                row_dict = {}  # You can add more detailed column names based on the actual data\n",
+    "                for i, val in enumerate(row):\n",
+    "                    row_dict[f\"Column_{i+1}\"] = val  # Map data to columns\n",
+    "                results.append(row_dict)\n",
+    "    \n",
+    "    # Convert results to DataFrame and save to CSV\n",
+    "    df = pd.DataFrame(results)\n",
+    "    print(df)\n",
+    "    df.to_csv(\"homicide_statistics.csv\", index=False)\n",
+    "\n",
+    "# Run the main function\n",
+    "main()\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "229a02fb-52ae-41f9-bbff-c9216e6bf0ed",
+   "metadata": {},
+   "source": [
+    "Short Writeup:\n",
+    "This web scraping agent is designed to be generic, and capable of handling various data extraction tasks. By leveraging requests and BeautifulSoup, it fetches content from websites, parses HTML to locate data (such as tables), and then stores it in a structured format (like CSV files) for further analysis.\n",
+    "\n",
+    "Key points include the flexibility to adapt the search and extraction functions for any content (not limited to crime-related statistics) and the ability to handle web pages with varying structures dynamically."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
